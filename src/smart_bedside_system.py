@@ -1,3 +1,4 @@
+from mock.GPIO import PWM
 from src.smart_bedside_error import SmartBedsideError
 
 try:
@@ -16,7 +17,7 @@ class SmartBedsideSystem:
     # BOARD (physical) numbers of the pins the components are connected to.
     BUZZER_PIN = 22  # KY-012 active buzzer used as the alarm (see User Story #2).
     BUTTON_PIN = 16  # B3F-1020 pushbutton used to stop the alarm (see User Story #3).
-    O2_SERVO_PIN = 12  # MG90S servo motor controlling the oxygen delivery valve (see User Story #4).
+    O2_SERVO_PIN = 12  # MG90S servo motor con\trolling the oxygen delivery valve (see User Story #4).
 
     def __init__(self):
         GPIO.setmode(GPIO.BOARD)  # Refer to the GPIO pins by their physical number on the board.
@@ -29,9 +30,11 @@ class SmartBedsideSystem:
 
         GPIO.setup(self.BUZZER_PIN, GPIO.OUT)
         GPIO.setup(self.BUTTON_PIN, GPIO.IN)
+        GPIO.setup(self.O2_SERVO_PIN, GPIO.OUT)
 
-        self.o2_servo = None  # Replace None by initializing the servo motor's PWM instance (see User Story #4).
-        self.o2_valve_angle = None  # Replace None by initializing the valve angle, in degrees (see User Story #4).
+        self.o2_servo = GPIO.PWM(self.O2_SERVO_PIN, 50)
+        self.o2_servo.start(5.0)
+        self.o2_valve_angle = 0.0
 
     def read_vital_signs(self) -> int:
         """
@@ -72,7 +75,13 @@ class SmartBedsideSystem:
         Args: angle (float): The target valve angle in degrees, between 0 and 180 degrees, inclusive.
         Raises: SmartBedsideError: If the target angle is outside the valid range of 0 to 180 degrees.
         """
-        # See User Story #4.
+        if 0.0 <= angle <= 180.0:
+            duty_cycle = 5.0 + (angle / 180.0) * 5.0
+            self.o2_servo.ChangeDutyCycle(duty_cycle)
+            self.o2_valve_angle = angle
+        else :
+            raise SmartBedsideError()
+
 
     def manage_oxygen_valve(self) -> None:
         """
