@@ -36,15 +36,16 @@ class SmartBedsideSystem:
         self.o2_servo.start(5.0)
         self.o2_valve_angle = 0.0
 
-    def read_vital_signs(self) -> int:
+    def read_vital_signs(self) -> list:
         """
         Read the patient's blood oxygen saturation (SpO₂).
         Returns: int: SpO₂ percentage (70–100).
         Raises: SmartBedsideError: If the sensor returns an invalid reading (-1).
         """
-        vital_signs = self.spo2_hr_sensor.get_spo2()
-        if vital_signs > 0:
-            return vital_signs
+        vital_signs_spo2 = self.spo2_hr_sensor.get_spo2()
+        vital_signs_heartbeat = self.spo2_hr_sensor.get_heartbeat()
+        if vital_signs_spo2 > 0 and vital_signs_heartbeat > 0:
+            return [vital_signs_spo2, vital_signs_heartbeat]
         raise SmartBedsideError()
 
     def manage_alarm(self) -> None:
